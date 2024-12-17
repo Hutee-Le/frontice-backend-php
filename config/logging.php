@@ -87,9 +87,9 @@ return [
             'level' => env('LOG_LEVEL', 'debug'),
             'handler' => env('LOG_PAPERTRAIL_HANDLER', \Monolog\Handler\SyslogUdpHandler::class),
             'handler_with' => [
-                'host' => env('PAPERTRAIL_URL', null),  // set mặc định là null
-                'port' => env('PAPERTRAIL_PORT', null),  // set mặc định là null
-                'connectionString' => env('PAPERTRAIL_URL') && env('PAPERTRAIL_PORT') ? 'tls://' . env('PAPERTRAIL_URL') . ':' . env('PAPERTRAIL_PORT') : null,
+                'host' => env('PAPERTRAIL_URL', null),
+                'port' => env('PAPERTRAIL_PORT', null),
+                'connectionString' => (env('PAPERTRAIL_URL') && env('PAPERTRAIL_PORT')) ? 'tls://' . env('PAPERTRAIL_URL') . ':' . env('PAPERTRAIL_PORT') : null,
             ],
             'processors' => [\Monolog\Processor\PsrLogMessageProcessor::class],
         ],
