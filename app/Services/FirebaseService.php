@@ -10,12 +10,29 @@ use Illuminate\Support\Facades\Log;
 class FirebaseService extends Service
 {
     protected $storage;
+    // public function __construct()
+    // {
+    //     $firebase = (new Factory())
+    //         ->withServiceAccount(config('firebase.credentials.file'))
+    //         ->withDefaultStorageBucket(config('firebase.storage.bucket'));
+    //     $this->storage = $firebase->createStorage();;
+    // }
+
     public function __construct()
     {
+        $credentials = config('firebase.credentials');
+
+        // Kiểm tra và xử lý lỗi nếu credentials không hợp lệ
+        if (empty($credentials) || !is_array($credentials)) {
+            throw new \Exception('Firebase credentials are not set properly.');
+        }
+
+        // Kết nối với Firebase Storage
         $firebase = (new Factory())
-            ->withServiceAccount(config('firebase.credentials.file'))
+            ->withServiceAccount($credentials)
             ->withDefaultStorageBucket(config('firebase.storage.bucket'));
-        $this->storage = $firebase->createStorage();;
+
+        $this->storage = $firebase->createStorage();
     }
 
     /**
