@@ -25,6 +25,8 @@ class VnpayService
     // Hàm tạo URL thanh toán
     public function createPaymentSubscription(Taskee $taskee, $service_id, $code = null)
     {
+        date_default_timezone_set('Asia/Ho_Chi_Minh');
+        
         $service = Service::findOrFail($service_id);
         $discount = $code ? Discount::where('code', $code)->where('expired', ">=", now())->first() : null;
         if ($discount && !$discount->usable()) {
