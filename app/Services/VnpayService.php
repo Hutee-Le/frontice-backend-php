@@ -11,44 +11,52 @@ use Illuminate\Support\Facades\Config;
 
 class VnpayService
 {
-    protected $vnp_TmnCode;
+   protected $vnp_TmnCode;
     protected $vnp_HashSecret;
     protected $vnp_Url;
 
     public function __construct()
     {
-        $this->vnp_TmnCode = config('vnpay.vnp_TmnCode');
-        $this->vnp_HashSecret = config('vnpay.vnp_HashSecret');
-        $this->vnp_Url = config('vnpay.vnp_Url');
+        // Lấy thông tin cấu hình từ ENV hoặc trực tiếp
+        $this->vnp_TmnCode = "35FBTFEX"; // Mã website tại VNPAY
+        $this->vnp_HashSecret = "SQ1ML23ZB7O9A9V5NAJQI2SYZCI3DYRQ"; // Chuỗi bí mật
+        $this->vnp_Url = "https://sandbox.vnpayment.vn/paymentv2/vpcpay.html"; // URL thanh toán của VNPAY
     }
 
     // Hàm tạo URL thanh toán
     public function createPaymentSubscription(Taskee $taskee, $service_id, $code = null)
     {
         date_default_timezone_set('Asia/Ho_Chi_Minh');
-        
+
+        // Lấy thông tin dịch vụ và chiết khấu
         $service = Service::findOrFail($service_id);
         $discount = $code ? Discount::where('code', $code)->where('expired', ">=", now())->first() : null;
         if ($discount && !$discount->usable()) {
             $discount = null;
         }
         $amount_paid = $service->price *  (100 - $discount?->value) / 100;
-        $vnp_TmnCode = env('VNP_TMN_CODE'); // Mã website của bạn
-        $vnp_HashSecret = env('VNP_HASH_SECRET'); // Chuỗi bí mật
-        $vnp_Url = env('VNP_URL');
-        $vnp_Returnurl = env('VNP_RETURN_URL');
-        $vnp_TxnRef = time() . $taskee->user->username; // Mã đơn hàng
+
+        // Lấy thông tin cấu hình từ ENV
+        $vnp_TmnCode = $this->vnp_TmnCode;
+        $vnp_HashSecret = $this->vnp_HashSecret;
+        $vnp_Url = $this->vnp_Url;
+        $vnp_Returnurl = "https://localhost/vnpay_php/vnpay_return.php"; // URL trả về
+
+        // Mã đơn hàng duy nhất
+        $vnp_TxnRef = time() . uniqid();
         $vnp_OrderInfo = "Thanh toán Gói Gold Frontice";
         $vnp_OrderType = 'billpayment';
         $vnp_Locale = 'vn';
         $vnp_BankCode = 'NCB';
         $vnp_IpAddr = request()->ip();
         $expire = Carbon::now()->addMinutes(15)->format('YmdHis');
+
+        // Tạo input data gửi sang VNPay server
         $inputData = array(
             "vnp_Version" => "2.1.0",
             "vnp_TmnCode" => $vnp_TmnCode,
-            "vnp_Command" => "pay",
             "vnp_Amount" => $amount_paid * 100,
+            "vnp_Command" => "pay",
             "vnp_CreateDate" => Carbon::now()->format('YmdHis'),
             "vnp_CurrCode" => "VND",
             "vnp_IpAddr" => $vnp_IpAddr,
@@ -65,6 +73,7 @@ class VnpayService
         }
 
         ksort($inputData);
+
         $query = "";
         $i = 0;
         $hashdata = "";
@@ -78,11 +87,16 @@ class VnpayService
             $query .= urlencode($key) . "=" . urlencode($value) . '&';
         }
 
+        // Tạo URL thanh toán
         $vnp_Url = $vnp_Url . "?" . $query;
+
         if (isset($vnp_HashSecret)) {
-            $vnpSecureHash =   hash_hmac('sha512', $hashdata, $vnp_HashSecret); //  
+            // Tính toán mã bảo mật
+            $vnpSecureHash = hash_hmac('sha512', $hashdata, $vnp_HashSecret);
             $vnp_Url .= 'vnp_SecureHash=' . $vnpSecureHash;
         }
+
+        // Tính toán ngày hết hạn của dịch vụ
         $gold_expires = Carbon::now();
         switch ($service->type) {
             case 'monthly':
@@ -100,6 +114,8 @@ class VnpayService
             default:
                 return ['code' => '01', 'message' => 'Invalid service type'];
         }
+
+        // Lưu thông tin vào cơ sở dữ liệu
         Subscription::create([
             'taskee_id' => $taskee->id,
             'service_id' => $service->id,
@@ -112,6 +128,7 @@ class VnpayService
             'status' => 'pending'
         ]);
 
+        // Trả về URL thanh toán
         return ['url' => $vnp_Url];
     }
 }
