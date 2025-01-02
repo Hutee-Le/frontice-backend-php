@@ -6,8 +6,8 @@ date_default_timezone_set('Asia/Ho_Chi_Minh');
  * and open the template in the editor.
  */
 
-$vnp_TmnCode = ""; //Mã định danh merchant kết nối (Terminal Id)
-$vnp_HashSecret = ""; //Secret key
+$vnp_TmnCode = "35FBTFEX"; //Mã định danh merchant kết nối (Terminal Id)
+$vnp_HashSecret = "SQ1ML23ZB7O9A9V5NAJQI2SYZCI3DYRQ"; //Secret key
 $vnp_Url = "https://sandbox.vnpayment.vn/paymentv2/vpcpay.html";
 $vnp_Returnurl = "http://localhost/vnpay_php/vnpay_return.php";
 $vnp_apiUrl = "http://sandbox.vnpayment.vn/merchant_webapi/merchant.html";
