@@ -47,7 +47,7 @@ Route::group([
     Route::get('/github/callback', [AuthController::class, 'handleGitHubCallback'])->middleware(['web']);
 });
 Route::get('/payment-vnpay', [VNPayController::class, 'createPayment'])->middleware(['api']);
-Route::get('/vnpay/return', [VnpayController::class, 'paymentReturn'])->name('vnpay.return')->middleware(['web']);
+Route::post('/vnpay/return', [VnpayController::class, 'paymentReturn'])->name('vnpay.return')->middleware(['web']);
 //Users
 Route::group(['prefix' => 'taskees', 'middleware' => ['api', 'role:taskee']], function () {
 
