@@ -33,8 +33,9 @@ class NotificationController extends Controller
     }
     public function seen($id)
     {
-        $notification = Notification::where('to', auth()->guard()->user())->findOrFail($id);
+        $notification = Notification::where('to', auth()->guard()->user()->id)->findOrFail($id);
         $notification->status = 'seen';
+        $notification->save();
         return ApiResponse::OK(NotificationResponse::notification($notification));
     }
 }
